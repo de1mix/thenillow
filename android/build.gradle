@@ -1,0 +1,76 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+val gdxVersion = "1.12.1"
+
+android {
+    namespace = "com.thenillow.game"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.thenillow.game"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("../assets")
+        }
+    }
+}
+
+dependencies {
+    implementation(project(":core"))
+    api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
+    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a")
+    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a")
+    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86")
+    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64")
+    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a")
+    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a")
+    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86")
+    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64")
+}
+
+// Копирует нативные .so библиотеки в jniLibs
+configurations.forEach { config ->
+    if (config.name == "natives") {
+        config.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+            val name = artifact.classifier ?: return@forEach
+            copy {
+                from(zipTree(artifact.file))
+                into("src/main/jniLibs/$name")
+                include("*.so")
+            }
+        }
+    }
+}
+
+fun DependencyHandlerScope.natives(dep: Any) {
+    configurations.getByName("natives")(dep)
+}
+
+// Создаём конфигурацию natives
+configurations {
+    create("natives")
+}
