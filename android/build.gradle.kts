@@ -17,6 +17,27 @@ android {
         versionName = "1.0"
     }
 
+    // ДОБАВЬ ЭТОТ БЛОК НИЖЕ:
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            useLegacyPackaging = true
+            pickFirsts += "lib/**/*.so" // Это решит проблему с дубликатами
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    // ... остальной код (compileOptions, kotlinOptions и т.д.) без изменений
+}
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
