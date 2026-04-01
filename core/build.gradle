@@ -1,9 +1,21 @@
-apply plugin: "java-library"
+plugins {
+    id 'java-library'
+}
 
-sourceCompatibility = 1.17
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
-sourceSets.main.java.srcDirs = [ "src/" ]
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src']
+    }
+}
 
 dependencies {
     api "com.badlogicgames.gdx:gdx:$gdxVersion"
