@@ -1,15 +1,11 @@
-plugins {
-    id("java-library")
-}
+apply plugin: "java-library"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
+sourceCompatibility = 1.17
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-val gdxVersion = "1.12.1"
+sourceSets.main.java.srcDirs = [ "src/" ]
 
 dependencies {
-    api("com.badlogicgames.gdx:gdx:$gdxVersion")
-    api("com.badlogicgames.gdx:gdx-box2d:$gdxVersion")
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 }
