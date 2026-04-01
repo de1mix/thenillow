@@ -20,6 +20,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -47,39 +48,42 @@ configurations {
 dependencies {
     implementation(project(":core"))
     api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
-    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a")
-    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a")
-    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86")
-    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64")
-    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a")
-    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a")
-    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86")
-    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64")
+    
+    val platforms = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+    platforms.forEach { platform ->
+        "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-$platform")
+        "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-$platform")
+    }
 }
 
 tasks.register("copyNatives") {
     doLast {
         configurations.getByName("natives").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
-            val name = artifact.classifier ?: return@forEach
-            copy {
-                from(zipTree(artifact.file))
-                into("src/main/jniLibs/$name")
-                include("*.so")
+            val name = artifact.classifier
+            if (name != null) {
+                copy {
+                    from(zipTree(artifact.file))
+                    into("src/main/jniLibs/$name")
+                    include("*.so")
+                }
             }
         }
     }
 }
 
-tasks.whenTaskAdded {
-    if (name == "mergeDebugNativeLibs" || name == "mergeReleaseNativeLibs") {
-        dependsOn("copyNatives")
+project.afterEvaluate {
+    tasks.all {
+        if (name.contains("merge") && name.contains("NativeLibs")) {
+            dependsOn("copyNatives")
+        }
     }
 }
 
+// Глобальные фиксы для всех зависимостей
 configurations.all {
     resolutionStrategy.eachDependency {
-        if (requested.group == "com.android.support" && !requested.name.contains("multidex")) {
-            useVersion("27.1.1")
+        if (requested.group == "com.android.support") {
+            useVersion("28.0.0")
         }
     }
 }
