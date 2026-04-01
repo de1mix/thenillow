@@ -18,7 +18,7 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
         }
     }
@@ -35,33 +35,31 @@ android {
     sourceSets {
         getByName("main") {
             assets.srcDirs("../assets")
+            jniLibs.srcDirs("src/main/jniLibs")
         }
     }
+}
+
+configurations {
+    create("natives")
 }
 
 dependencies {
     implementation(project(":core"))
     api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
-    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a")
-    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a")
-    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86")
-    natives("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64")
-    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a")
-    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a")
-    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86")
-    natives("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64")
+    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a")
+    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a")
+    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86")
+    "natives"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64")
+    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a")
+    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a")
+    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86")
+    "natives"("com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64")
 }
 
-// Копирует нативные .so библиотеки в jniLibs
-configurations.all {
-    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-        if (details.requested.group == 'com.android.support' && !details.requested.name.contains('multidex')) {
-            details.useVersion "27.1.1"
-        }
-    }
-}
-    if (config.name == "natives") {
-        config.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+tasks.register("copyNatives") {
+    doLast {
+        configurations.getByName("natives").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
             val name = artifact.classifier ?: return@forEach
             copy {
                 from(zipTree(artifact.file))
@@ -72,11 +70,16 @@ configurations.all {
     }
 }
 
-fun DependencyHandlerScope.natives(dep: Any) {
-    configurations.getByName("natives")(dep)
+tasks.whenTaskAdded {
+    if (name == "mergeDebugNativeLibs" || name == "mergeReleaseNativeLibs") {
+        dependsOn("copyNatives")
+    }
 }
 
-// Создаём конфигурацию natives
-configurations {
-    create("natives")
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.android.support" && !requested.name.contains("multidex")) {
+            useVersion("27.1.1")
+        }
+    }
 }
