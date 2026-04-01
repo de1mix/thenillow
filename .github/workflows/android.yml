@@ -1,26 +1,36 @@
-name: Android CI
+name: Build APK
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: # Позволяет запускать сборку кнопкой вручную
 
 jobs:
   build:
-
+    name: Build Android App
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: set up JDK 11
+    - name: 📥 Получение кода
+      uses: actions/checkout@v4
+
+    - name: ☕ Настройка Java 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
+        cache: gradle # Ускоряет следующие сборки
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+    - name: ⚙️ Выдача прав для Gradle
+      run: chmod +x ./gradlew
+
+    - name: 🔨 Сборка APK (TheNillow)
+      # Используем assembleDebug вместо build, это быстрее и надежнее
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: 📦 Сохранение готового APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: TheNillow-debug
+        # Ищем APK файл в любой папке проекта
+        path: '**/*.apk'
