@@ -53,7 +53,9 @@ dependencies {
 }
 
 // Копирует нативные .so библиотеки в jniLibs
-configurations.all { ->
+configurations.all {
+    resolutionStrategy.force 'com.android.support:support-v4:27.1.0'
+}
     if (config.name == "natives") {
         config.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
             val name = artifact.classifier ?: return@forEach
