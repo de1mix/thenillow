@@ -53,7 +53,7 @@ dependencies {
 }
 
 // Копирует нативные .so библиотеки в jniLibs
-configurations.forEach { config ->
+configurations.all { ->
     if (config.name == "natives") {
         config.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
             val name = artifact.classifier ?: return@forEach
